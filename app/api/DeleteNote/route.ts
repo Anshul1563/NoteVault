@@ -12,6 +12,8 @@ export async function POST(request: Request) {
         }
     })
 
+    console.log(deleteNote)
+
     
 
     return Response.json({ message: "Note deleted successfully" })

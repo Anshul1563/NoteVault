@@ -16,9 +16,7 @@ async function NotePage({ params }) {
 
 	const noteInfo = await GetNoteInfo(noteId)
 
-	console.log('note info', noteInfo)
-
-	return <Notes noteID={noteId} currentNote = {noteInfo} />;
+	return <Notes currentNote = {noteInfo} />;
 }
 
 export default NotePage;
