@@ -21,14 +21,16 @@
       {
         "name": "next"
       }
-    ]
+    ],
+    "strictNullChecks": true
   },
   "include": [
     "next-env.d.ts",
     ".next/types/**/*.ts",
     "**/*.ts",
-    "**/*.tsx"
-, "app/api/notevault/route.js"  ],
+    "**/*.tsx",
+    "app/api/notevault/route.js"
+  ],
   "exclude": [
     "node_modules"
   ]

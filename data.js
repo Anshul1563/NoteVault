@@ -173,10 +173,10 @@ export const footer = [
 
 export const notesData = [
 	{
-		id: v4(),
 		title: "Welcome to NoteVault 👋",
 		createdDate: new Date(),
 		lastModifiedDate: new Date(),
+		tag : "Welcome",
 		content: `# Welcome to [NoteVault](https://notevault.vercel.app) Markdown Notepad
 
 

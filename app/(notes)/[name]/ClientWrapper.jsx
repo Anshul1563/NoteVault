@@ -14,9 +14,8 @@ import {
 	SkeletonTitle,
 } from "../../../components/Skeleton";
 import NotesNavbar from "../../../components/NotesNavbar";
-import { v4 } from "uuid";
 
-const UserPage = () => {
+const ClientWrapper = ({ notes }) => {
 	const { data: session, status } = useSession();
 
 	const pathname = usePathname();
@@ -36,8 +35,25 @@ const UserPage = () => {
 	const [greetings, setGreetings] = useState("");
 	const [input, setInput] = useState("");
 	const [showAddCard, setShowAddCard] = useState(false);
+	const [tag, setTag] = useState("");
 
-	const [info, setInfo] = useState([]);
+	const arrSorting = (arr, type, attribute = "") => {
+		if (type === "asc") {
+			const ascending = arr.sort(
+				(a, b) => new Date(a.createdDate) - new Date(b.createdDate)
+			);
+			return ascending;
+		} else {
+			const descending = arr.sort((a, b) => {
+				return (
+					new Date(b.lastModifiedDate) - new Date(a.lastModifiedDate)
+				);
+			});
+			return descending;
+		}
+	};
+
+	const [info, setInfo] = useState(arrSorting(notes, "asc"));
 
 	const randomGreeting = [
 		`Salutations! ${user.name}`,
@@ -66,33 +82,46 @@ const UserPage = () => {
 		} else {
 			setGreetings("Hi! Guest User");
 		}
+	}, [user]); // eslint-disable-line no-console
 
-		if (localStorage.getItem("allNotes") === null) {
-			localStorage.setItem("allNotes", JSON.stringify(notesData));
-		}
-		// const sortedNotes = JSON.parse(localStorage.getItem("allNotes")).sort(
-		// 	(obj1, obj2) => Number(obj1.createdDate) - Number(obj2.createdDate)
-		// );
-		const userNotes = JSON.parse(localStorage.getItem("allNotes"));
-		setInfo(arrSorting(userNotes, "asc"));
-	}, [user, showAddCard]); // eslint-disable-line no-console
-
-	const addNewCard = () => {
-		const newNoteData = {
-			id: v4(),
-			title: input,
-			content: "",
-			createdDate: new Date(),
-			lastModifiedDate: new Date(),
+	async function addNewCard() {
+		
+        
+        const newNoteData = {
+			noteInfo: {
+				title: input,
+				content: "",
+				tag: tag,
+				createdDate: new Date(),
+				lastModifiedDate: new Date(),
+            },
+            email : user.email
 		};
 
+        // send data to api post
+        const res = await fetch('/api/notes', {
+            method: 'POST',
+            body: JSON.stringify(newNoteData),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+		})
+		
+		const data = await res.json()
+
+		console.log("Data back",data)
+
 		setInput("");
-		localStorage.setItem(
-			"allNotes",
-			JSON.stringify([...info, newNoteData])
-		);
+		// localStorage.setItem(
+		// 	"allNotes",
+		// 	JSON.stringify([...info, newNoteData])
+		// );
+		setTag("");
 		setShowAddCard(false);
-	};
+
+		router.push(`/${user.email.split("@")[0]}/${data.id}`);
+
+	}
 
 	const handleInputChange = (event) => {
 		setInput(event.target.value);
@@ -100,22 +129,6 @@ const UserPage = () => {
 
 	const handleCardClick = (item) => {
 		const { title, id } = item;
-	};
-
-	const arrSorting = (arr, type, attribute = "") => {
-		if (type === "asc") {
-			const ascending = arr.sort(
-				(a, b) => new Date(a.createdDate) - new Date(b.createdDate)
-			);
-			return ascending;
-		} else {
-			const descending = arr.sort((a, b) => {
-				return (
-					new Date(b.lastModifiedDate) - new Date(a.lastModifiedDate)
-				);
-			});
-			return descending;
-		}
 	};
 
 	if (status === "unauthenticated") {
@@ -130,9 +143,8 @@ const UserPage = () => {
 		);
 	}
 
-	
 	if (
-		(status === "authenticated") &&
+		status === "authenticated" &&
 		pathname !== `/${session.user.email.split("@")[0]}`
 	) {
 		console.log(status, pathname);
@@ -143,10 +155,7 @@ const UserPage = () => {
 	return (
 		<>
 			<main className="flex flex-col flex-1 w-full overflow-x-hidden font-poppins">
-				<NotesNavbar
-					user={user}
-					main={true}
-				/>
+				<NotesNavbar user={user} main={true} />
 				<div
 					style={{ maxHeight: "100vh" }}
 					className="flex-1 overflow-y-auto"
@@ -247,15 +256,30 @@ const UserPage = () => {
 
 									<div className="h-28 p-5 transition-all hover:border-stone-500 rounded text-white bg-dark-100 flex flex-col items-center justify-center">
 										{showAddCard ? (
-											<div className="flex items-center justify-center w-full">
-												<input
-													className="text-sm w-full flex-grow flex-[1] font-medium placeholder:text-text-200 placeholder:text-xs p-0 text-text-100 bg-transparent focus:ring-0 putline-none border-0 focus:outline-none focus:border-0"
-													placeholder="Note title"
-													type="text"
-													value={input}
-													autoFocus
-													onChange={handleInputChange}
-												/>
+											<div className="flex h-full items-center justify-center w-full">
+												<div className="flex justify-between h-full flex-col items-center">
+													<input
+														className="text-sm w-full flex-grow flex-[1] font-medium placeholder:text-text-200 placeholder:text-xs p-0 text-text-100 bg-transparent focus:ring-0 putline-none border-0 focus:outline-none focus:border-0"
+														placeholder="Note title"
+														type="text"
+														value={input}
+														autoFocus
+														onChange={
+															handleInputChange
+														}
+													/>
+													<input
+														className="text-sm w-full flex-grow flex-[1] font-medium placeholder:text-text-200 placeholder:text-xs p-0 text-text-100 bg-transparent focus:ring-0 putline-none border-0 focus:outline-none focus:border-0"
+														placeholder="Note Tag"
+														type="text"
+														value={tag}
+														onChange={(e) =>
+															setTag(
+																e.target.value
+															)
+														}
+													/>
+												</div>
 												<button
 													onClick={
 														input.length > 0
@@ -292,4 +316,4 @@ const UserPage = () => {
 	);
 };
 
-export default UserPage;
+export default ClientWrapper;
